@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JUST FOR UR EYES MIMI </title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacOSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 15px;
+            background: #f8f9fa;
+            color: #333;
+            line-height: 1.5;
+        }
+        h2 { margin: 10px 0; text-align: center; }
+        #status { 
+            text-align: center; 
+            font-weight: bold; 
+            margin: 10px 0; 
+            color: #666; 
+        }
+        input, button {
+            display: block;
+            width: 100%;
+            max-width: 380px;
+            margin: 10px auto;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover { background: #218838; }
+        #chatBox {
+            max-width: 380px;
+            margin: 15px auto;
+            height: 280px;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            padding: 12px;
+            background: white;
+            overflow-y: auto;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .msg { margin: 8px 0; padding: 8px 12px; border-radius: 18px; max-width: 80%; }
+        .you { background: #dcf8c6; align-self: flex-end; margin-left: auto; }
+        .them { background: #fff; border: 1px solid #eee; }
+        #howto { 
+            max-width: 600px; 
+            margin: 30px auto; 
+            padding: 15px; 
+            background: #fffef0; 
+            border-left: 4px solid #ffc107; 
+            font-size: 0.95em; 
+        }
+        .highlight { background: #fff176; font-weight: bold; padding: 2px 4px; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h2>Fast communication 🚀 – Made by Yazid</h2>
+    <div id="status">Status: Not connected yet...</div>
+
+    <input type="text" id="myId" placeholder="Your ID will show here" readonly>
+    <input type="text" id="friendId" placeholder="Paste your friend's ID here">
+    <button onclick="joinTheirRoom()">Connect to them</button>
+
+    <input type="text" id="msgBox" placeholder="Type something...">
+    <button onclick="sendIt()">Send</button>
+
+    <div id="chatBox"></div>
+
+    <div id="howto">
+        <p><strong>Yo, haw kifeh testa3mleha :</strong></p>
+        <p>el page hethi tnjmi t7elea 3l both of devices (phone + laptop whatever). 7asilou bech yothherlek random id. ab3eth el id eli bech yben lsa7bek eli t7eb ta7ki m3eh  (WhatsApp, smoke signals, idc). hwa ya3mel paste lel id mte3ek flabel thenya el fer8a . Boom — tw tnjmu t7aku m3e b3adhkom. No accounts, no servers, just pure peer magic. Great for copying links/codes/notes between devices without typing twice.</p>
+        <p><span class="highlight">Pro tip:</span>btw ray ta5dem 5ir ki ybda same wifi wt5dm zeda ki mybdech same . ken 3lt 8lta s8ira a3ml refrech and reconnect .</p>
+    </div>
+
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+
+    <script>
+        function makeId() {
+            return Math.random().toString(36).substr(2, 5).toUpperCase();
+        }
+
+        const peer = new Peer(makeId());
+        let connection = null;
+
+        peer.on('open', (id) => {
+            document.getElementById('myId').value = id;
+            updateStatus(`Your ID: ${id} (share this!)`);
+            console.log('My peer ID is:', id);
+        });
+
+        peer.on('connection', (conn) => {
+            connection = conn;
+            setupTheChat(conn);
+        });
+
+        function joinTheirRoom() {
+            const theirId = document.getElementById('friendId').value.trim();
+            if (!theirId) {
+                alert("Bruh enter their ID first 😅");
+                return;
+            }
+            connection = peer.connect(theirId);
+            setupTheChat(connection);
+        }
+
+        function setupTheChat(conn) {
+            conn.on('open', () => {
+                updateStatus(`Connected to ${conn.peer}! Say hi 👋`);
+                document.getElementById('msgBox').focus();
+            });
+
+            conn.on('data', (text) => {
+                addChatMessage(text, 'them');
+            });
+
+            conn.on('close', () => {
+                updateStatus('Connection dropped... 😢');
+                connection = null;
+            });
+
+            conn.on('error', (err) => {
+                console.error('Connection issue:', err);
+                updateStatus('Oops, something broke: ' + err.message);
+            });
+        }
+
+        function sendIt() {
+            const text = document.getElementById('msgBox').value.trim();
+            if (!text) return;
+            if (!connection || !connection.open) {
+                alert("Connect first, dude!");
+                return;
+            }
+            connection.send(text);
+            addChatMessage(text, 'you');
+            document.getElementById('msgBox').value = '';
+            document.getElementById('msgBox').focus();
+        }
+
+        function addChatMessage(msg, who) {
+            const box = document.getElementById('chatBox');
+            const div = document.createElement('div');
+            div.className = `msg ${who}`;
+            div.textContent = msg;
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function updateStatus(text) {
+            document.getElementById('status').textContent = text;
+        }
+
+        peer.on('error', (err) => {
+            console.error(err);
+            updateStatus('Peer error: ' + err.type);
+        });
+    </script>
+</body>
+</html>
